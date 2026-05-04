@@ -389,7 +389,7 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
           <div class="kpi-card" style="--accent:var(--yellow)"><div class="kpi-icon">🔍</div><div class="kpi-label">Verificación</div><div class="kpi-value" id="kpi-verificacion">—</div><div class="kpi-sub">en diagnóstico</div></div>
           <div class="kpi-card" style="--accent:var(--purple)"><div class="kpi-icon">🔧</div><div class="kpi-label">Reparación</div><div class="kpi-value" id="kpi-reparacion">—</div><div class="kpi-sub">en proceso</div></div>
           <div class="kpi-card" style="--accent:var(--green)"><div class="kpi-icon">✅</div><div class="kpi-label">Listos</div><div class="kpi-value" id="kpi-listo">—</div><div class="kpi-sub">para retirar</div></div>
-          <div class="kpi-card" style="--accent:var(--orange)"><div class="kpi-icon">💰</div><div class="kpi-label">Facturado (mes)</div><div class="kpi-value" id="kpi-facturado" style="font-size:20px;">—</div><div class="kpi-sub" id="kpi-facturado-sub"></div></div>
+          <div class="kpi-card" id="kpi-facturado-card" style="--accent:var(--orange)"><div class="kpi-icon">💰</div><div class="kpi-label">Facturado (mes)</div><div class="kpi-value" id="kpi-facturado" style="font-size:20px;">—</div><div class="kpi-sub" id="kpi-facturado-sub"></div></div>
         </div>
         <div class="section-header"><div class="section-title">Pipeline</div></div>
         <div class="pipeline" id="pipeline-dash">
@@ -1152,6 +1152,12 @@ function renderDashboard() {
 }
 
 async function cargarKpiFacturado() {
+  // Solo Admin y Administración ven montos facturados
+  const kpiCard = document.getElementById('kpi-facturado-card');
+  if (SESSION.rol === 'Técnico' || SESSION.rol === 'Gerencia') {
+    if (kpiCard) kpiCard.style.display = 'none';
+    return;
+  }
   const mes  = new Date().getMonth();
   const anio = new Date().getFullYear();
   const res  = await api('reporteMes', { mes, anio });
