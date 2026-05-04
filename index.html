@@ -642,7 +642,7 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
         <div class="form-group"><label class="form-label">Tipo de contacto</label><select class="form-select" id="crm-tipo"><option value="llamada">📞 Llamada</option><option value="whatsapp">💬 WhatsApp</option><option value="mail">📧 Mail</option></select></div>
         <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="crm-fecha" type="date"></div>
         <div class="form-group"><label class="form-label">Hora</label><input class="form-input" id="crm-hora" type="time"></div>
-        <div class="form-group"><label class="form-label">Resultado</label><select class="form-select" id="crm-resultado"><option>Hablado</option><option>No atendió</option><option>Mensaje de voz</option><option>Reclamo</option><option>Pendiente respuesta</option><option>Respondió</option></select></div>
+        <div class="form-group"><label class="form-label">Resultado</label><select class="form-select" id="crm-resultado"><option>Contactado</option><option>No atendió</option><option>Mensaje de voz</option><option>Reclamo</option><option>Pendiente respuesta</option><option>Respondió</option></select></div>
         <div class="form-group"><label class="form-label">Próxima acción</label><input class="form-input" id="crm-prox" placeholder="Ej. Llamar en 48hs"></div>
         <div class="form-group form-full"><label class="form-label">Detalle</label><textarea class="form-textarea" id="crm-detalle" placeholder="¿Qué se habló o envió?"></textarea></div>
       </div>
@@ -1428,7 +1428,7 @@ async function cargarCRM() {
     return;
   }
   const iconos = { llamada:'📞', whatsapp:'💬', mail:'📧' };
-  const colores = { 'Hablado':'crm-ok','Respondió':'crm-ok','No atendió':'crm-no','Reclamo':'crm-no','Pendiente respuesta':'crm-pending','Mensaje de voz':'crm-pending' };
+  const colores = { 'Contactado':'crm-ok','Respondió':'crm-ok','No atendió':'crm-no','Reclamo':'crm-no','Pendiente respuesta':'crm-pending','Mensaje de voz':'crm-pending' };
   el.innerHTML = res.data.map(l => `
     <div class="crm-item">
       <div class="crm-dot">${iconos[l.tipo_contacto] || '📞'}</div>
