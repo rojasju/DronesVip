@@ -348,13 +348,20 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
           <span class="nav-icon">🔑</span>Cambiar contraseña
         </div>
       </div>
-      <div class="user-card" onclick="doLogout()">
+      <div class="user-card">
         <div class="user-avatar" id="user-avatar">?</div>
-        <div>
-          <div class="user-name" id="user-name-display">—</div>
+        <div style="flex:1;min-width:0;">
+          <div class="user-name" id="user-name-display" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
           <div class="user-role-label" id="user-role-display">—</div>
         </div>
-        <div class="logout-btn" title="Cerrar sesión">⏻</div>
+        <button onclick="doLogout()" title="Cerrar sesión" style="
+          width:30px;height:30px;border-radius:50%;
+          background:var(--bg4);border:1px solid var(--border-soft);
+          color:var(--text-muted);font-size:14px;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;
+          flex-shrink:0;transition:all 0.2s;
+        " onmouseover="this.style.background='rgba(255,71,87,0.15)';this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+           onmouseout="this.style.background='var(--bg4)';this.style.borderColor='var(--border-soft)';this.style.color='var(--text-muted)'">⏻</button>
       </div>
     </div>
   </aside>
