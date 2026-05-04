@@ -642,7 +642,7 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
         <div class="form-group"><label class="form-label">Tipo de contacto</label><select class="form-select" id="crm-tipo"><option value="llamada">📞 Llamada</option><option value="whatsapp">💬 WhatsApp</option><option value="mail">📧 Mail</option></select></div>
         <div class="form-group"><label class="form-label">Fecha</label><input class="form-input" id="crm-fecha" type="date"></div>
         <div class="form-group"><label class="form-label">Hora</label><input class="form-input" id="crm-hora" type="time"></div>
-        <div class="form-group"><label class="form-label">Resultado</label><select class="form-select" id="crm-resultado"><option>Contactado</option><option>No atendió</option><option>Mensaje de voz</option><option>Reclamo</option><option>Pendiente respuesta</option><option>Respondió</option></select></div>
+        <div class="form-group"><label class="form-label">Resultado</label><select class="form-select" id="crm-resultado"><option>Hablado</option><option>No atendió</option><option>Mensaje de voz</option><option>Reclamo</option><option>Pendiente respuesta</option><option>Respondió</option></select></div>
         <div class="form-group"><label class="form-label">Próxima acción</label><input class="form-input" id="crm-prox" placeholder="Ej. Llamar en 48hs"></div>
         <div class="form-group form-full"><label class="form-label">Detalle</label><textarea class="form-textarea" id="crm-detalle" placeholder="¿Qué se habló o envió?"></textarea></div>
       </div>
@@ -770,7 +770,23 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Constancia (opcional)</label><input class="form-input mono" id="tarea-constancia" placeholder="#C-0001"></div>
         <div class="form-group"><label class="form-label">Fecha recordatorio</label><input class="form-input" id="tarea-fecha" type="date"></div>
-        <div class="form-group form-full"><label class="form-label">Tarea</label><textarea class="form-textarea" id="tarea-desc" style="min-height:60px;" placeholder="Describí la tarea o recordatorio..."></textarea></div>
+        <div class="form-group"><label class="form-label">Asignar a</label>
+          <select class="form-select" id="tarea-asignado">
+            <option value="">— Sin asignar —</option>
+            <option value="Administrador">Administrador</option>
+            <option value="Técnico">Técnico</option>
+            <option value="Administración">Administración</option>
+            <option value="Gerencia">Gerencia</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Prioridad</label>
+          <select class="form-select" id="tarea-prioridad">
+            <option value="Normal">Normal</option>
+            <option value="Urgente">Urgente</option>
+            <option value="Baja">Baja</option>
+          </select>
+        </div>
+        <div class="form-group form-full"><label class="form-label">Descripción de la tarea</label><textarea class="form-textarea" id="tarea-desc" style="min-height:80px;" placeholder="Describí la tarea o recordatorio..."></textarea></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -1412,7 +1428,7 @@ async function cargarCRM() {
     return;
   }
   const iconos = { llamada:'📞', whatsapp:'💬', mail:'📧' };
-  const colores = { 'Contactado':'crm-ok','Respondió':'crm-ok','No atendió':'crm-no','Reclamo':'crm-no','Pendiente respuesta':'crm-pending','Mensaje de voz':'crm-pending' };
+  const colores = { 'Hablado':'crm-ok','Respondió':'crm-ok','No atendió':'crm-no','Reclamo':'crm-no','Pendiente respuesta':'crm-pending','Mensaje de voz':'crm-pending' };
   el.innerHTML = res.data.map(l => `
     <div class="crm-item">
       <div class="crm-dot">${iconos[l.tipo_contacto] || '📞'}</div>
@@ -1783,56 +1799,86 @@ async function cargarAgenda() {
     return;
   }
 
-  // Actualizar badge rojo pulsante en el nav de agenda (estilo WhatsApp)
-  setNotifBadge('agenda', res.data.length);
+  // Filtrar por rol — Administrador ve todas, resto solo las de su rol + sin asignar
+  let tareas = res.data.filter(t => {
+    if (!t.asignado_a || t.asignado_a === '') return true;
+    if (SESSION.rol === 'Administrador') return true;
+    return t.asignado_a === SESSION.rol;
+  });
 
-  if (!res.data.length) {
+  // Badge muestra solo las que le corresponden al usuario logueado
+  setNotifBadge('agenda', tareas.length);
+
+  if (!tareas.length) {
     el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><p>Sin tareas pendientes ✓</p></div>';
     return;
   }
 
-  // Ordenar por fecha_recordatorio
+  // Ordenar: urgentes primero, luego por fecha
   const hoy = new Date().toISOString().split('T')[0];
-  const tareas = [...res.data].sort((a, b) => {
+  tareas = tareas.sort((a, b) => {
+    if (a.prioridad === 'Urgente' && b.prioridad !== 'Urgente') return -1;
+    if (b.prioridad === 'Urgente' && a.prioridad !== 'Urgente') return 1;
     const fa = isoDate(a.fecha_recordatorio) || '9999';
     const fb = isoDate(b.fecha_recordatorio) || '9999';
     return fa.localeCompare(fb);
   });
 
+  const coloresPrioridad = { Urgente:'var(--red)', Normal:'var(--text-dim)', Baja:'var(--text-muted)' };
+
   el.innerHTML = tareas.map(t => {
-    const fechaIso = isoDate(t.fecha_recordatorio);
-    const vencida  = fechaIso && fechaIso < hoy;
-    const hoyMismo = fechaIso === hoy;
+    const fechaIso   = isoDate(t.fecha_recordatorio);
+    const vencida    = fechaIso && fechaIso < hoy;
+    const hoyMismo   = fechaIso === hoy;
     const colorFecha = vencida ? 'var(--red)' : hoyMismo ? 'var(--yellow)' : 'var(--text-dim)';
     const etiqueta   = vencida ? '⚠️ Vencida' : hoyMismo ? '📌 Hoy' : '';
+    const prioridad  = t.prioridad || 'Normal';
+    const asignado   = t.asignado_a || '—';
 
     return `
-    <div class="detail-row" style="align-items:center;gap:12px;">
-      <div style="min-width:130px;">
+    <div class="detail-row" style="align-items:center;gap:12px;flex-wrap:wrap;">
+      <div style="min-width:120px;">
         <span class="mono" style="font-size:12px;color:${colorFecha};">${t.fecha_recordatorio || 'Sin fecha'}</span>
         ${etiqueta ? `<br><span style="font-size:10px;font-weight:700;color:${colorFecha};">${etiqueta}</span>` : ''}
         ${t.constancia ? `<br><span style="font-size:11px;color:var(--orange);">${t.constancia}</span>` : ''}
       </div>
-      <span class="detail-val" style="text-align:left;flex:1;">${escHtml(t.tarea || '')}</span>
-      <span style="font-size:11px;color:var(--text-muted);">${t.usuario || ''}</span>
-      <button class="btn btn-success-outline btn-xs" onclick="completarTarea(${t.id})" title="Marcar como completada">✓ Listo</button>
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:13px;">${escHtml(t.tarea || '')}</div>
+        <div style="margin-top:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:10px;font-weight:700;color:${coloresPrioridad[prioridad] || 'var(--text-dim)'};">● ${prioridad}</span>
+          <span style="font-size:10px;color:var(--text-muted);">→ <strong style="color:var(--orange-bright)">${asignado}</strong></span>
+          <span style="font-size:10px;color:var(--text-muted);">por ${t.usuario || '—'}</span>
+        </div>
+      </div>
+      <button class="btn btn-success-outline btn-xs" onclick="completarTarea(${t.id})">✓ Listo</button>
     </div>`;
   }).join('');
 }
 
-function abrirModalTarea() { document.getElementById('modal-tarea').classList.add('open'); }
+function abrirModalTarea() {
+  document.getElementById('tarea-constancia').value = '';
+  document.getElementById('tarea-desc').value = '';
+  document.getElementById('tarea-asignado').value = '';
+  document.getElementById('tarea-prioridad').value = 'Normal';
+  document.getElementById('tarea-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('modal-tarea').classList.add('open');
+}
 
 async function guardarTarea() {
+  const desc = val('tarea-desc');
+  if (!desc.trim()) { showToast('Escribí una descripción para la tarea', true); return; }
   const res = await api('nuevaTarea', {
     constancia:         val('tarea-constancia'),
     fecha_recordatorio: val('tarea-fecha'),
-    tarea:              val('tarea-desc'),
+    tarea:              desc,
+    asignado_a:         val('tarea-asignado'),
+    prioridad:          val('tarea-prioridad'),
     usuario:            SESSION.nombre,
   });
   if (!res.ok) { showToast(res.error, true); return; }
   cerrarModal('modal-tarea');
   showToast('Tarea creada ✓');
-  cargarAgenda();
+  await cargarAgenda();
 }
 
 async function completarTarea(id) {
