@@ -1367,7 +1367,7 @@ async function abrirModalFactura(constancia='') {
         setSelect('fac-tipo',facE.tipo_factura);setSelect('fac-iva',facE.condicion_iva);setSelect('fac-estado',facE.estado_pago);
       } else {
         const c=CONSTANCIAS.find(x=>String(x.constancia)===String(constancia)||String(x.id)===String(constancia));
-        if(c){const cli=CLIENTES.find(cl=>cl.id_cliente==c.id_cliente);if(cli){document.getElementById('fac-cuit').value=cli.cuit||'';setSelect('fac-tipo',cli.tipo_factura);setSelect('fac-iva',cli.condicion_iva);}}
+        if(c){document.getElementById('fac-nombre-rs').value = c.cliente || ''; const cli=CLIENTES.find(cl=>cl.id_cliente==c.id_cliente);if(cli){document.getElementById('fac-cuit').value=cli.cuit||'';setSelect('fac-tipo',cli.tipo_factura);setSelect('fac-iva',cli.condicion_iva);}}
       }
     }
   }
