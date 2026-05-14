@@ -12,7 +12,7 @@
   --bg4:#1E242C;--border:rgba(255,107,0,0.15);--border-soft:rgba(255,255,255,0.06);
   --text:#E8EDF3;--text-dim:#7A8799;--text-muted:#4A5568;
   --green:#00D084;--yellow:#FFB700;--red:#FF4757;--blue:#3D9EFF;--purple:#B47FFF;
-}
+}	
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Exo 2',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
@@ -1330,7 +1330,7 @@ async function cargarFacturas() {
     const c=CONSTANCIAS.find(x=>x.id==f.constancia);
     return `<tr>
       <td><span class="mono" style="color:var(--orange)">${c?c.constancia:f.constancia}</span></td>
-      <td>${c?c.cliente:'—'}</td>
+      <td>${(c?c.cliente:null)||f.cliente||'—'}</td>
       <td><strong>${f.tipo_factura||'—'}</strong></td>
       <td>${ojito(f.servicio_tecnico?'$'+formatNum(f.servicio_tecnico):'—')}</td>
       <td>${ojito(f.total_insumos?'$'+formatNum(f.total_insumos):'—')}</td>
