@@ -559,10 +559,10 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
       <input type="hidden" id="c-id">
       <div class="form-grid">
         <div class="form-section-title">Datos de la orden</div>
-        <div class="form-group"><label class="form-label">N° Constancia <span style="color:var(--red)">*</span></label><input class="form-input mono" id="c-nro" placeholder="Ej. 2024-001" style="color:var(--orange)" autocomplete="off"></div>
+        <div class="form-group"><label class="form-label">N° Constancia <span style="color:var(--red)">*</span></label><input class="form-input mono" id="c-nro" placeholder="Ej. C-001" style="color:var(--orange)" autocomplete="off"></div>
         <div class="form-group">
           <label class="form-label">CMDF <span style="font-size:9px;color:var(--text-muted)">(Constancia Manual de Documento Físico)</span></label>
-          <input class="form-input mono" id="c-cmdf" placeholder="Ej. FAC-001 o nro. doc. físico">
+          <input class="form-input mono" id="c-cmdf" placeholder="Ej. Nro de constancia 005300">
         </div>
         <div class="form-group"><label class="form-label">Fecha ingreso</label><input class="form-input" id="c-fecha-ingreso" type="date"></div>
         <div class="form-group"><label class="form-label">Cliente</label><select class="form-select" id="c-cliente-select" onchange="onClienteSelect()"><option value="">Seleccionar...</option></select></div>
@@ -1376,7 +1376,8 @@ async function abrirModalFactura(constancia='') {
 
 async function guardarFactura() {
   const res=await api('guardarFactura',{
-    constancia:val('fac-constancia'),tipo_factura:val('fac-tipo'),
+    constancia:val('fac-constancia'),cliente: val('fac-nombre-rs'), 
+	tipo_factura:val('fac-tipo'),
     cuit:val('fac-cuit'),condicion_iva:val('fac-iva'),
     servicio_tecnico:val('fac-servicio'),total_insumos:val('fac-insumos'),
     total_final:val('fac-total'),   // el backend agrega "+ IVA"
