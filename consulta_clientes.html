@@ -289,12 +289,12 @@ function renderResultado(d){
   const pasos=[
     {key:'recepcion',   label:'Recepción',              icon:'📥', fecha:d.fecha_ingreso},
     {key:'verificacion',label:'Verificación / Diagnóstico',icon:'🔍',fecha:d.fecha_verificacion},
-    {key:'reparacion',  label:'Reparación',             icon:'🔧', fecha:d.fecha_reparacion},
     {key:'espera_repuestos',label:'Espera de repuestos',icon:'⏳', fecha:''},
+    {key:'reparacion',  label:'Reparación',             icon:'🔧', fecha:d.fecha_reparacion},
     {key:'listo',       label:'Listo para retirar',     icon:'✅', fecha:''},
-    {key:'entregado',   label:'Entregado',              icon:'🎉', fecha:d.fecha_entrega},
+    {key:'entregado',   label:'Entregado',              icon:'📦', fecha:d.fecha_entrega},
   ];
-  const orden=['recepcion','verificacion','reparacion','espera_repuestos','listo','entregado'];
+  const orden=['recepcion','verificacion','espera_repuestos','reparacion','listo','entregado'];
   const idx=orden.indexOf(d.estado);
 
   let tlHtml='';
