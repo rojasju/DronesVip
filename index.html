@@ -1526,32 +1526,80 @@ async function cargarCRMEnDetalle(nro) {
   s.innerHTML=res.data.map(l=>`<div class="crm-item" style="padding:10px 0;"><div class="crm-dot">${ico[l.tipo_contacto]||'📞'}</div><div class="crm-body"><strong style="font-size:12px;">${l.tipo_contacto}</strong> <span class="crm-meta">${l.fecha||''}${l.hora?' · '+l.hora+' hs':''} · ${l.usuario||''}</span>${l.detalle?`<div style="font-size:12px;color:var(--text-dim);margin-top:3px;">${escHtml(l.detalle)}</div>`:''}<div class="crm-resultado ${col[l.resultado]||''}">${l.resultado||''}</div>${l.proxima_accion?`<div class="crm-meta">→ ${escHtml(l.proxima_accion)}</div>`:''}</div></div>`).join('');
 }
 
-// ══ DETALLE FACTURA ══
-function verDetalleFactura(f){
-  if(typeof f==='string'){try{f=JSON.parse(f);}catch(e){return;}}
-  const c=CONSTANCIAS.find(x=>x.id==f.constancia);
-  document.getElementById('det-fac-btn-editar').onclick=()=>{cerrarModal('modal-detalle-factura');abrirModalFactura(f.constancia);};
-  document.getElementById('det-fac-body').innerHTML=`
+function verDetalleFactura(f) {
+  if (typeof f === 'string') { try { f = JSON.parse(f); } catch(e) { return; } }
+  const c = CONSTANCIAS.find(x => x.id == f.constancia);
+
+  document.getElementById('det-fac-btn-editar').onclick = () => {
+    cerrarModal('modal-detalle-factura');
+    abrirModalFactura(f.constancia);
+  };
+
+  // Formatea fecha — maneja ISO timestamp y dd/MM/yyyy
+  const fmtF = (v) => {
+    if (!v || v === '—') return '—';
+    const s = String(v).trim();
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s;
+    try { const d = new Date(s); if (!isNaN(d)) { return String(d.getDate()).padStart(2,'0')+'/'+(String(d.getMonth()+1).padStart(2,'0'))+'/'+d.getFullYear(); } } catch(e) {}
+    return s;
+  };
+
+  // Muestra total_final tal cual — puede ser "45000 + IVA" o número
+  const totalDisplay = (v) => {
+    if (!v && v !== 0) return '—';
+    const s = String(v).trim();
+    if (s === '' || s === '0') return '—';
+    if (isNaN(Number(s.replace(',','.')))) return s; // texto como "45000 + IVA"
+    return formatMoney(Number(s.replace(',','.')));
+  };
+
+  document.getElementById('det-fac-body').innerHTML = `
     <div class="factura-header">
-      <div><div class="factura-logo">🚁 DronesVIP</div><div style="font-size:11px;color:var(--text-dim);margin-top:3px;">Centro de Instrucción Aeronáutica Civil</div></div>
-      <div style="text-align:right;"><div class="factura-nro">Tipo ${f.tipo_factura||'—'}</div>${f.nro_factura?`<div class="mono" style="color:var(--orange);font-size:14px;">${f.nro_factura}</div>`:''}<div style="font-size:12px;color:var(--text-dim);">Fecha: ${f.fecha_factura||'—'}</div></div>
-    </div>
-    <div class="detalle-seccion"><div class="detalle-seccion-titulo">Cliente</div>
-      <div class="detalle-campo"><span class="dk">Constancia</span><span class="dv mono" style="color:var(--orange)">${c?c.constancia:f.constancia}</span></div>
-      <div class="detalle-campo"><span class="dk">Cliente</span><span class="dv">${c?c.cliente:'—'}</span></div>
-      <div class="detalle-campo"><span class="dk">CUIT</span><span class="dv mono">${f.cuit||'—'}</span></div>
-      <div class="detalle-campo"><span class="dk">Condición IVA</span><span class="dv">${f.condicion_iva||'—'}</span></div>
-      ${c?`<div class="detalle-campo"><span class="dk">Equipo</span><span class="dv">${c.marca} ${c.modelo}</span></div>`:''}
-    </div>
-    <div class="factura-total"><div class="factura-total-box">
-      <div class="factura-total-row"><span>S. Técnico</span><span class="mono">${f.servicio_tecnico?'$'+formatNum(f.servicio_tecnico):'—'}</span></div>
-      <div class="factura-total-row"><span>Insumos</span><span class="mono">${f.total_insumos?'$'+formatNum(f.total_insumos):'—'}</span></div>
-      <div class="factura-total-row final"><span>TOTAL</span><span class="mono">${escHtml(String(f.total_final||'—'))}</span></div>
-      <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);">
-        ${badgePago(f.estado_pago)}
-        ${f.link_factura?`&nbsp;<button class="btn btn-ghost btn-xs" onclick="window.open('${f.link_factura}')">🔗 Ver factura</button>`:''}
+      <div>
+        <div class="factura-logo">🚁 DronesVIP</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:3px;">Centro de Instrucción Aeronáutica Civil</div>
+        <div style="font-size:11px;color:var(--text-dim);">Laboratorio Aeronáutico</div>
       </div>
-    </div></div>`;
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:var(--text-dim);letter-spacing:0.1em;text-transform:uppercase;">Comprobante</div>
+        <div class="factura-nro">Tipo ${f.tipo_factura || '—'}</div>
+        ${f.nro_factura ? `<div class="mono" style="color:var(--orange);font-size:14px;">${f.nro_factura}</div>` : ''}
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">Fecha: ${fmtF(f.fecha_factura)}</div>
+      </div>
+    </div>
+
+    <div class="detalle-seccion">
+      <div class="detalle-seccion-titulo">Cliente</div>
+      <div class="detalle-campo"><span class="dk">Constancia</span><span class="dv mono" style="color:var(--orange)">${c ? c.constancia : f.constancia}</span></div>
+      <div class="detalle-campo"><span class="dk">Cliente</span><span class="dv">${c ? c.cliente : '—'}</span></div>
+      <div class="detalle-campo"><span class="dk">CUIT</span><span class="dv mono">${f.cuit || '—'}</span></div>
+      <div class="detalle-campo"><span class="dk">Condición IVA</span><span class="dv">${f.condicion_iva || '—'}</span></div>
+      ${c ? `<div class="detalle-campo"><span class="dk">Equipo</span><span class="dv">${c.marca} ${c.modelo} — ${c.serie_drone || ''}</span></div>` : ''}
+    </div>
+
+    <div class="detalle-seccion">
+      <div class="detalle-seccion-titulo">Conceptos</div>
+      <table class="factura-tabla">
+        <thead><tr><th>Concepto</th><th style="text-align:right">Importe</th></tr></thead>
+        <tbody>
+          <tr><td>Servicio técnico / Mano de obra</td><td style="text-align:right" class="mono">${formatMoney(f.servicio_tecnico)}</td></tr>
+          <tr><td>Insumos y repuestos utilizados</td><td style="text-align:right" class="mono">${formatMoney(f.total_insumos)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="factura-total">
+      <div class="factura-total-box">
+        <div class="factura-total-row"><span>Subtotal mano de obra</span><span class="mono">${formatMoney(f.servicio_tecnico)}</span></div>
+        <div class="factura-total-row"><span>Subtotal insumos</span><span class="mono">${formatMoney(f.total_insumos)}</span></div>
+        <div class="factura-total-row final"><span>TOTAL</span><span class="mono">${totalDisplay(f.total_final)}</span></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border-soft);">
+          ${badgePago(f.estado_pago)}
+          ${f.link_factura ? `&nbsp;<button class="btn btn-ghost btn-xs" onclick="window.open('${f.link_factura}')">🔗 Ver factura</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+
   document.getElementById('modal-detalle-factura').classList.add('open');
 }
 
