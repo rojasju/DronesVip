@@ -694,9 +694,6 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
       <button class="modal-close" onclick="cerrarModal('modal-factura')">✕</button>
     </div>
     <div class="modal-body">
-      <div style="background:rgba(255,183,0,0.07);border:1px solid rgba(255,183,0,0.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);margin-bottom:12px;">
-        💡 Todos los campos son de carga manual. El total final se guardará con "+ IVA" automáticamente.
-      </div>
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Constancia</label><input class="form-input mono" id="fac-constancia" placeholder="#C-0001" oninput="autocompletarClienteFactura(this.value)"></div>
         <div class="form-group"><label class="form-label">Tipo factura</label><select class="form-select" id="fac-tipo"><option>A</option><option>B</option><option>C</option></select></div>
@@ -1390,6 +1387,7 @@ async function abrirModalFactura(constancia='') {
   document.getElementById('fac-cliente-select').value = '';
   poblarSelectClientesFactura();
   document.getElementById('fac-constancia').value = constancia;
+  if (constancia) autocompletarClienteFactura(constancia);
   document.getElementById('fac-fecha').value = new Date().toISOString().split('T')[0];
   if (constancia) {
     const res = await api('listarFacturas');
