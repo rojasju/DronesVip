@@ -1413,31 +1413,6 @@ async function abrirModalFactura(constancia='') {
   }
   document.getElementById('modal-factura').classList.add('open');
 }
-  document.getElementById('fac-constancia').value=constancia;
-  document.getElementById('fac-fecha').value=new Date().toISOString().split('T')[0];
-  if(constancia){
-    const res=await api('listarFacturas');
-    if(res.ok){
-      const facE=res.data.find(f=>String(f.constancia)===String(constancia));
-      if(facE){
-        document.getElementById('fac-nombre-rs').value =facE.nombre_rs||'';
-        document.getElementById('fac-cuit').value      =facE.cuit||'';
-        document.getElementById('fac-servicio').value  =facE.servicio_tecnico||'';
-        document.getElementById('fac-insumos').value   =facE.total_insumos||'';
-        // Mostrar total sin el " + IVA" para edición
-        document.getElementById('fac-total').value     =String(facE.total_final||'').replace(/\s*\+\s*IVA/gi,'').trim();
-        document.getElementById('fac-nro').value       =facE.nro_factura||'';
-        document.getElementById('fac-link').value      =facE.link_factura||'';
-        if(facE.fecha_factura) document.getElementById('fac-fecha').value=isoDate(facE.fecha_factura);
-        setSelect('fac-tipo',facE.tipo_factura);setSelect('fac-iva',facE.condicion_iva);setSelect('fac-estado',facE.estado_pago);
-      } else {
-        const c=CONSTANCIAS.find(x=>String(x.constancia)===String(constancia)||String(x.id)===String(constancia));
-        if(c){document.getElementById('fac-nombre-rs').value = c.cliente || ''; const cli=CLIENTES.find(cl=>cl.id_cliente==c.id_cliente);if(cli){document.getElementById('fac-cuit').value=cli.cuit||'';setSelect('fac-tipo',cli.tipo_factura);setSelect('fac-iva',cli.condicion_iva);}}
-      }
-    }
-  }
-  document.getElementById('modal-factura').classList.add('open');
-}
 
 async function guardarFactura() {
   const res=await api('guardarFactura',{
