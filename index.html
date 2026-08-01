@@ -700,9 +700,15 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
       <div class="form-grid">
         <div class="form-group"><label class="form-label">Constancia</label><input class="form-input mono" id="fac-constancia" placeholder="#C-0001"></div>
         <div class="form-group"><label class="form-label">Tipo factura</label><select class="form-select" id="fac-tipo"><option>A</option><option>B</option><option>C</option></select></div>
-        <div class="form-group"><label class="form-label">Nombre / Razón social</label><input class="form-input" id="fac-nombre-rs" placeholder="Nombre o razón social del cliente"></div>
+        <div class="form-group form-full">
+          <label class="form-label">Cliente <span style="font-size:9px;color:var(--text-muted);">(se autocompletan CUIT y condición IVA)</span></label>
+          <select class="form-select" id="fac-cliente-select" onchange="onFacClienteSelect()">
+            <option value="">— Seleccionar cliente —</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Nombre / Razón social</label><input class="form-input" id="fac-nombre-rs" placeholder="Nombre o razón social"></div>
         <div class="form-group"><label class="form-label">CUIT</label><input class="form-input mono" id="fac-cuit" placeholder="XX-XXXXXXXX-X"></div>
-        <div class="form-group"><label class="form-label">Condición IVA</label><select class="form-select" id="fac-iva"><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select></div>
+        <div class="form-group"><label class="form-label">Condición IVA</label><select class="form-select" id="fac-iva"><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select></div><div class="form-group"><label class="form-label">Condición IVA</label><select class="form-select" id="fac-iva"><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select></div>
         <div class="form-group"><label class="form-label">Servicio técnico ($)</label><input class="form-input mono" id="fac-servicio" placeholder="Ej: 45000"></div>
         <div class="form-group"><label class="form-label">Total insumos ($)</label><input class="form-input mono" id="fac-insumos" placeholder="Ej: 12000"></div>
         <div class="form-group">
@@ -1346,8 +1352,67 @@ async function cargarFacturas() {
     </tr>`;}).join(''):'<tr><td colspan="9"><div class="empty-state"><div class="empty-icon">🧾</div><p>Sin facturas registradas.</p></div></td></tr>';
 }
 
+function poblarSelectClientesFactura() {
+  const sel = document.getElementById('fac-cliente-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">— Seleccionar cliente —</option>' +
+    CLIENTES.map(c => `<option value="${c.id_cliente}">${c.nombre}${c.razon_social ? ' — ' + c.razon_social : ''}</option>`).join('');
+}
+
+function onFacClienteSelect() {
+  const id = document.getElementById('fac-cliente-select').value;
+  if (!id) return;
+  const cli = CLIENTES.find(c => c.id_cliente == id);
+  if (!cli) return;
+  document.getElementById('fac-nombre-rs').value = cli.nombre || '';
+  document.getElementById('fac-cuit').value = cli.cuit || '';
+  setSelect('fac-iva', cli.condicion_iva);
+  setSelect('fac-tipo', cli.tipo_factura);
+}
+
 async function abrirModalFactura(constancia='') {
   limpiarModal(['fac-constancia','fac-nombre-rs','fac-cuit','fac-servicio','fac-insumos','fac-total','fac-nro','fac-link']);
+  document.getElementById('fac-cliente-select').value = '';
+  poblarSelectClientesFactura();
+  document.getElementById('fac-constancia').value = constancia;
+  document.getElementById('fac-fecha').value = new Date().toISOString().split('T')[0];
+  if (constancia) {
+    const res = await api('listarFacturas');
+    if (res.ok) {
+      const facE = res.data.find(f => String(f.constancia) === String(constancia));
+      if (facE) {
+        document.getElementById('fac-nombre-rs').value = facE.nombre_rs || facE.cliente || '';
+        document.getElementById('fac-cuit').value      = facE.cuit || '';
+        document.getElementById('fac-servicio').value  = facE.servicio_tecnico || '';
+        document.getElementById('fac-insumos').value   = facE.total_insumos || '';
+        document.getElementById('fac-total').value     = String(facE.total_final || '').replace(/\s*\+\s*IVA/gi, '').trim();
+        document.getElementById('fac-nro').value       = facE.nro_factura || '';
+        document.getElementById('fac-link').value      = facE.link_factura || '';
+        if (facE.fecha_factura) document.getElementById('fac-fecha').value = isoDate(facE.fecha_factura);
+        setSelect('fac-tipo', facE.tipo_factura);
+        setSelect('fac-iva', facE.condicion_iva);
+        setSelect('fac-estado', facE.estado_pago);
+        // Seleccionar cliente en el dropdown si existe
+        const c = CONSTANCIAS.find(x => String(x.constancia) === String(constancia) || String(x.id) === String(constancia));
+        if (c) document.getElementById('fac-cliente-select').value = c.id_cliente || '';
+      } else {
+        // Factura nueva — autocompletar desde la constancia
+        const c = CONSTANCIAS.find(x => String(x.constancia) === String(constancia) || String(x.id) === String(constancia));
+        if (c) {
+          document.getElementById('fac-cliente-select').value = c.id_cliente || '';
+          const cli = CLIENTES.find(cl => cl.id_cliente == c.id_cliente);
+          if (cli) {
+            document.getElementById('fac-nombre-rs').value = cli.nombre || '';
+            document.getElementById('fac-cuit').value = cli.cuit || '';
+            setSelect('fac-tipo', cli.tipo_factura);
+            setSelect('fac-iva', cli.condicion_iva);
+          }
+        }
+      }
+    }
+  }
+  document.getElementById('modal-factura').classList.add('open');
+}
   document.getElementById('fac-constancia').value=constancia;
   document.getElementById('fac-fecha').value=new Date().toISOString().split('T')[0];
   if(constancia){
