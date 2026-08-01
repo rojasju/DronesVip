@@ -708,7 +708,7 @@ td{padding:11px 13px;font-size:13px;vertical-align:middle;}
         </div>
         <div class="form-group"><label class="form-label">Nombre / Razón social</label><input class="form-input" id="fac-nombre-rs" placeholder="Nombre o razón social"></div>
         <div class="form-group"><label class="form-label">CUIT</label><input class="form-input mono" id="fac-cuit" placeholder="XX-XXXXXXXX-X"></div>
-        <div class="form-group"><label class="form-label">Condición IVA</label><select class="form-select" id="fac-iva"><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select></div><div class="form-group"><label class="form-label">Condición IVA</label><select class="form-select" id="fac-iva"><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select></div>
+        <div class="form-group"><label class="form-label">Condición IVA</label><select class="form-select" id="fac-iva"><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select><option>Responsable Inscripto</option><option>Monotributo</option><option>Exento</option><option>Consumidor Final</option></select></div>
         <div class="form-group"><label class="form-label">Servicio técnico ($)</label><input class="form-input mono" id="fac-servicio" placeholder="Ej: 45000"></div>
         <div class="form-group"><label class="form-label">Total insumos ($)</label><input class="form-input mono" id="fac-insumos" placeholder="Ej: 12000"></div>
         <div class="form-group">
@@ -1611,7 +1611,7 @@ function verDetalleFactura(f) {
     <div class="detalle-seccion">
       <div class="detalle-seccion-titulo">Cliente</div>
       <div class="detalle-campo"><span class="dk">Constancia</span><span class="dv mono" style="color:var(--orange)">${c ? c.constancia : f.constancia}</span></div>
-      <div class="detalle-campo"><span class="dk">Cliente</span><span class="dv">${c ? c.cliente : '—'}</span></div>
+      <div class="detalle-campo"><span class="dk">Cliente</span><span class="dv">${c ? (c.cliente || f.cliente || '—') : (f.cliente || '—')}</span></div>
       <div class="detalle-campo"><span class="dk">CUIT</span><span class="dv mono">${f.cuit || '—'}</span></div>
       <div class="detalle-campo"><span class="dk">Condición IVA</span><span class="dv">${f.condicion_iva || '—'}</span></div>
       ${c ? `<div class="detalle-campo"><span class="dk">Equipo</span><span class="dv">${c.marca} ${c.modelo} — ${c.serie_drone || ''}</span></div>` : ''}
